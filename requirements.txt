@@ -1,8 +1,0 @@
-streamlit
-matplotlib
-seaborn
-pandas
-langchain
-langchain-experimental
-langchain-community
-openai
