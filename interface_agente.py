@@ -26,17 +26,25 @@ if not api_key:
     st.stop()
 
 # ------------------------
-# Carregar CSV e criar agente
+# Upload de arquivo e criação do agente
 # ------------------------
-caminho_csv = r"C:\Users\britt\Downloads\agente_csv_ia2a\creditcard.csv"
-df = pd.read_csv(caminho_csv)
+arquivo = st.file_uploader("📂 Envie o arquivo Excel ou CSV para análise", type=["xlsx", "csv"])
 
-agent = create_csv_agent(
-    OpenAI(temperature=0, api_key=api_key),
-    caminho_csv,
-    verbose=False,
-    allow_dangerous_code=True
-)
+if arquivo is not None:
+    if arquivo.name.endswith(".csv"):
+        df = pd.read_csv(arquivo)
+    else:
+        df = pd.read_excel(arquivo)
+
+    agent = create_csv_agent(
+        OpenAI(temperature=0, api_key=api_key),
+        arquivo,
+        verbose=False,
+        allow_dangerous_code=True
+    )
+else:
+    st.warning("Por favor, envie um arquivo CSV ou Excel para iniciar a análise.")
+    st.stop()
 
 # ------------------------
 # Inicializa memória
@@ -70,12 +78,12 @@ for i, (q, r) in enumerate(st.session_state.historico):
 # Gráficos automáticos
 # ------------------------
 if pergunta and "gráfico" in pergunta.lower():
-    if "amount" in pergunta.lower():
+    if "amount" in pergunta.lower() and "Amount" in df.columns:
         st.subheader("📊 Gráfico da coluna Amount")
         fig, ax = plt.subplots()
         sns.histplot(df['Amount'], bins=50, ax=ax)
         st.pyplot(fig)
-    elif "tempo" in pergunta.lower() and "fraude" in pergunta.lower():
+    elif "tempo" in pergunta.lower() and "fraude" in pergunta.lower() and "Time" in df.columns and "Class" in df.columns:
         st.subheader("📊 Fraudes ao longo do tempo")
         fig, ax = plt.subplots()
         sns.lineplot(data=df[df['Class'] == 1], x='Time', y='Amount', ax=ax)
